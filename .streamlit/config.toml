@@ -6,3 +6,7 @@ level = "debug"
 
 [cache]
 maxEntries = 1000
+maxAge = 1  # 캐시 만료 시간 1초 (실시간 업데이트)
+
+[server]
+runOnSave = true
