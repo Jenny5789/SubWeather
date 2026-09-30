@@ -19,59 +19,30 @@ import pandas as pd
 
 
 def make_station_master() -> pd.DataFrame:
-    """station_id, station_name, line, latitude, longitude, region (서울 지하철 276개 역)."""
-
-    # 호선별 끝점 좌표 및 역 수 (선형 보간용)
-    line_configs = {
-        "1호선": {"start": (37.5550, 126.9733), "end": (37.5825, 127.0521), "count": 44},
-        "2호선": {"start": (37.4979, 127.0276), "end": (37.5550, 126.9240), "count": 48, "is_circular": True},
-        "3호선": {"start": (37.6789, 127.0456), "end": (37.4650, 127.0200), "count": 34},
-        "4호선": {"start": (37.6189, 127.0202), "end": (37.5280, 126.9713), "count": 28},
-        "5호선": {"start": (37.5702, 126.9768), "end": (37.5214, 126.9244), "count": 52, "is_circular": True},
-        "6호선": {"start": (37.5380, 126.9789), "end": (37.5093, 126.9844), "count": 33, "is_circular": True},
-        "7호선": {"start": (37.6689, 127.0319), "end": (37.4860, 127.0114), "count": 52},
-        "8호선": {"start": (37.5549, 127.1266), "end": (37.4979, 127.0276), "count": 28},
-        "9호선": {"start": (37.5509, 126.8495), "end": (37.5663, 126.9779), "count": 38},
-    }
-
-    rows = []
-    station_counter = 1
-
-    for line, config in line_configs.items():
-        start_lat, start_lon = config["start"]
-        end_lat, end_lon = config["end"]
-        count = config["count"]
-        is_circular = config.get("is_circular", False)
-
-        for i in range(count):
-            # 선형 보간
-            if count > 1:
-                ratio = i / (count - 1)
-            else:
-                ratio = 0
-
-            lat = start_lat + (end_lat - start_lat) * ratio
-            lon = start_lon + (end_lon - start_lon) * ratio
-
-            # 순환선의 경우 약간의 원형 왜곡 추가
-            if is_circular:
-                angle = (i / count) * 2 * 3.14159
-                lat += 0.02 * pd.np.sin(angle) if hasattr(pd, 'np') else 0
-                lon += 0.02 * pd.np.cos(angle) if hasattr(pd, 'np') else 0
-
-            station_id = f"STN{station_counter:0>5d}"
-            station_name = f"{line[0]}호선-{i+1}"
-
-            rows.append({
-                "station_id": station_id,
-                "station_name": station_name,
-                "line": line,
-                "latitude": round(lat, 4),
-                "longitude": round(lon, 4),
-                "region": "서울",
-            })
-            station_counter += 1
-
+    """station_id, station_name, line, latitude, longitude, region (20개 주요 역)."""
+    # 원래 20개 고정 데이터 (Streamlit Cloud 서버 부하 줄이기)
+    rows = [
+        {"station_id": "STN001", "station_name": "서울역", "line": "1호선", "latitude": 37.5550, "longitude": 126.9733, "region": "서울"},
+        {"station_id": "STN002", "station_name": "시청", "line": "1호선", "latitude": 37.5658, "longitude": 126.9784, "region": "서울"},
+        {"station_id": "STN003", "station_name": "종로3가", "line": "1호선", "latitude": 37.5738, "longitude": 126.9920, "region": "서울"},
+        {"station_id": "STN004", "station_name": "동대문역사문화공원", "line": "1호선", "latitude": 37.5706, "longitude": 127.0084, "region": "서울"},
+        {"station_id": "STN005", "station_name": "강남", "line": "2호선", "latitude": 37.4979, "longitude": 127.0276, "region": "서울"},
+        {"station_id": "STN006", "station_name": "교대", "line": "2호선", "latitude": 37.4943, "longitude": 127.0059, "region": "서울"},
+        {"station_id": "STN007", "station_name": "홍대입구", "line": "2호선", "latitude": 37.5550, "longitude": 126.9240, "region": "서울"},
+        {"station_id": "STN008", "station_name": "신사", "line": "2호선", "latitude": 37.5184, "longitude": 127.0269, "region": "서울"},
+        {"station_id": "STN009", "station_name": "잠실", "line": "2호선", "latitude": 37.5115, "longitude": 127.0720, "region": "서울"},
+        {"station_id": "STN010", "station_name": "고속터미널", "line": "3호선", "latitude": 37.5007, "longitude": 127.0096, "region": "서울"},
+        {"station_id": "STN011", "station_name": "충무로", "line": "3호선", "latitude": 37.5599, "longitude": 126.9968, "region": "서울"},
+        {"station_id": "STN012", "station_name": "교대", "line": "3호선", "latitude": 37.4943, "longitude": 127.0059, "region": "서울"},
+        {"station_id": "STN013", "station_name": "광화문", "line": "5호선", "latitude": 37.5702, "longitude": 126.9768, "region": "서울"},
+        {"station_id": "STN014", "station_name": "여의도", "line": "5호선", "latitude": 37.5214, "longitude": 126.9244, "region": "서울"},
+        {"station_id": "STN015", "station_name": "한강진", "line": "6호선", "latitude": 37.5380, "longitude": 126.9789, "region": "서울"},
+        {"station_id": "STN016", "station_name": "고속터미널", "line": "7호선", "latitude": 37.5007, "longitude": 127.0096, "region": "서울"},
+        {"station_id": "STN017", "station_name": "명동", "line": "4호선", "latitude": 37.5604, "longitude": 126.9856, "region": "서울"},
+        {"station_id": "STN018", "station_name": "고속터미널", "line": "9호선", "latitude": 37.5007, "longitude": 127.0096, "region": "서울"},
+        {"station_id": "STN019", "station_name": "신논현", "line": "9호선", "latitude": 37.5663, "longitude": 126.9779, "region": "서울"},
+        {"station_id": "STN020", "station_name": "삼성", "line": "2호선", "latitude": 37.5074, "longitude": 127.0580, "region": "서울"},
+    ]
     return pd.DataFrame(rows)
 
 
