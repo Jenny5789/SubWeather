@@ -40,13 +40,13 @@ from src.merge import (
     merge_weather_ridership,
 )
 
-# 2025년 하반기 데이터 — 최근 6개월 (실제 기상청 API 데이터)
+# 테스트 데이터 — 1개월 샘플 (빠른 로딩, Streamlit Cloud 최적화)
 DEMO_START = "2025-07-01"
-DEMO_END = "2025-12-31"
+DEMO_END = "2025-07-31"
 DEMO_DATES = tuple(pd.date_range(DEMO_START, DEMO_END, freq="D").strftime("%Y-%m-%d").tolist())
 
-HEATWAVE_DATE = "2025-08-15"
-COLDWAVE_DATE = "2025-12-15"
+HEATWAVE_DATE = "2025-07-15"  # 7월 중순
+COLDWAVE_DATE = "2025-07-25"  # 7월 하순 (폭염과 한파 동시 시뮬레이션)
 
 WEATHER_CONDITION_LABELS = {
     "맑음": "맑은 날 증감률",
