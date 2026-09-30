@@ -86,14 +86,25 @@ def classify_weather_condition(weather_df: pd.DataFrame) -> pd.DataFrame:
 
 def prepare_dummy_data() -> dict:
     """더미 데이터를 생성하고 기존 파이프라인 함수(merge.py, collectors)로 가공한다."""
+    st.write("🔍 **디버깅 정보:**")
+
     station_df = compute_transfer_yn(make_station_master())
+    st.write(f"✅ 역 데이터: {len(station_df)}개 행")
+
     weather_station_df = make_weather_stations()
+    st.write(f"✅ 기상소 데이터: {len(weather_station_df)}개 행")
+
     station_weather_map = match_nearest_station(station_df, weather_station_df)
+    st.write(f"✅ 역-기상소 매칭: {len(station_weather_map)}개")
 
     ridership_df = compute_ridership_total(make_ridership_hourly(dates=DEMO_DATES))
+    st.write(f"✅ 승하차 데이터: {len(ridership_df)}개 행")
+
     ridership_df = add_time_bucket(ridership_df)
+    st.write(f"✅ 시간대 분류 후: {len(ridership_df)}개 행")
 
     weather_df = make_weather_hourly(dates=DEMO_DATES)
+    st.write(f"✅ 기상 데이터: {len(weather_df)}개 행")
     # 데모용 극단 기온 주입 (폭염/한파 조건이 실제로 존재하도록)
     weather_df.loc[weather_df["date"] == HEATWAVE_DATE, "temperature"] = 34
     weather_df.loc[weather_df["date"] == HEATWAVE_DATE, "rainfall"] = 0.0
@@ -102,12 +113,17 @@ def prepare_dummy_data() -> dict:
     weather_df = classify_weather_condition(weather_df)
 
     merged_df = merge_weather_ridership(ridership_df, weather_df, station_weather_map)
+    st.write(f"✅ 기상-승하차 병합: {len(merged_df)}개 행")
+
     merged_df = merged_df.merge(
         station_df[["station_id", "station_name", "line", "latitude", "longitude", "region"]],
         on="station_id",
         how="left",
     )
+    st.write(f"✅ 역 정보 추가 후: {len(merged_df)}개 행")
+
     merged_df = flag_vacation_period(merged_df)
+    st.write(f"✅ 휴일 플래그 후: {len(merged_df)}개 행")
 
     dispersion_df = compute_dispersion_metrics(merged_df)
 
