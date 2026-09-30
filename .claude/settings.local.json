@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import pandas; print\\(pandas.__version__\\)\")",
+      "PowerShell(python -c \"import pandas; print\\(pandas.__version__\\)\")",
+      "PowerShell(Get-Command python, py -ErrorAction SilentlyContinue)",
+      "PowerShell(py -c \"import pandas; print\\(pandas.__version__\\)\")",
+      "PowerShell(py -c \"import streamlit; print\\('streamlit', streamlit.__version__\\)\")",
+      "PowerShell(py -c \"import plotly; print\\('plotly', plotly.__version__\\)\")",
+      "PowerShell(py -c \"import streamlit_plotly_events; print\\('spe ok'\\)\" 2>&1)",
+      "PowerShell(py -m pip install --quiet streamlit plotly streamlit-plotly-events pandas numpy 2>&1)",
+      "PowerShell(py -c \"import sys; print\\(sys.executable\\)\")",
+      "PowerShell(py -c \"import streamlit; print\\('streamlit ok', streamlit.__version__\\)\")",
+      "Bash(py -c ' *)",
+      "PowerShell(py -m pip install --quiet folium streamlit-folium 2>&1)",
+      "PowerShell(py -c \"import folium, streamlit_folium; print\\('ok', folium.__version__\\)\")",
+      "Bash(tasklist)",
+      "PowerShell(Get-NetTCPConnection -LocalPort 8501 -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-CimInstance Win32_Process -Filter \"ProcessId=23492\")",
+      "PowerShell(Stop-Process -Id 23492 -Force -ErrorAction SilentlyContinue)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:8501)",
+      "WebSearch",
+      "WebFetch(domain:ysjang0926.github.io)",
+      "WebFetch(domain:www.data.go.kr)",
+      "WebFetch(domain:data.seoul.go.kr)",
+      "Bash(python test_ridership_api.py)",
+      "Bash(git init *)",
+      "Bash(git config *)",
+      "Bash(git add *)",
+      "Bash(git commit -m 'Add 2025 real weather data analysis with realistic fixtures *)"
+    ]
+  }
+}
