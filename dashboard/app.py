@@ -84,7 +84,6 @@ def classify_weather_condition(weather_df: pd.DataFrame) -> pd.DataFrame:
     return weather_df.assign(weather_condition=weather_df.apply(_classify, axis=1))
 
 
-@st.cache_data
 def prepare_dummy_data() -> dict:
     """더미 데이터를 생성하고 기존 파이프라인 함수(merge.py, collectors)로 가공한다."""
     station_df = compute_transfer_yn(make_station_master())
