@@ -4,7 +4,32 @@
 
 이 프로젝트는 기상 데이터와 지하철 이용 데이터를 연결하여 **다양한 시각화 기법**으로 인사이트를 도출합니다.
 
-🔗 **GitHub:** https://github.com/Jenny5789/SubWeather
+🔗 **Live Demo:** https://subweather.streamlit.app
+📌 **GitHub:** https://github.com/Jenny5789/SubWeather
+
+---
+
+## 📸 스크린샷
+
+### 개요 탭 - 서울 지하철 노선도
+노선별 색상으로 구분된 지도. 버블 크기는 이용량을 나타냅니다.
+![Dashboard](images/01_dashboard.webp)
+
+### 강수량 분석
+강수량과 지하철 이용량의 관계를 보여주는 산점도입니다.
+![Rainfall Analysis](images/02_rainfall.png)
+
+### 노선/역 분석
+호선별 이용량 비교와 상위/하위 역 순위입니다.
+![Line Analysis](images/03_line_analysis.png)
+
+### 시간/요일 분석
+평일과 주말의 시간대별 이용 패턴 비교입니다.
+![Time Analysis](images/04_time_analysis.png)
+
+### 특수 분석
+휴가철 영향도와 호선별 혼잡도 통계입니다.
+![Special Analysis](images/05_special_analysis.png)
 
 ---
 
@@ -104,30 +129,6 @@
 ```
 Haversine 거리 공식으로 각 역의 가장 가까운 기상소 연결
 ```
-
----
-
-## 📸 스크린샷
-
-### 개요 탭 - 서울 지하철 노선도
-노선별 색상으로 구분된 지도. 버블 크기는 이용량을 나타냅니다.
-![Dashboard](images/01_dashboard.webp)
-
-### 강수량 분석
-강수량과 지하철 이용량의 관계를 보여주는 산점도입니다.
-![Rainfall Analysis](images/02_rainfall.png)
-
-### 노선/역 분석
-호선별 이용량 비교와 상위/하위 역 순위입니다.
-![Line Analysis](images/03_line_analysis.png)
-
-### 시간/요일 분석
-평일과 주말의 시간대별 이용 패턴 비교입니다.
-![Time Analysis](images/04_time_analysis.png)
-
-### 특수 분석
-휴가철 영향도와 호선별 혼잡도 통계입니다.
-![Special Analysis](images/05_special_analysis.png)
 
 ---
 
