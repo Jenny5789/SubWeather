@@ -5,7 +5,6 @@
 이 프로젝트는 기상 데이터와 지하철 이용 데이터를 연결하여 **다양한 시각화 기법**으로 인사이트를 도출합니다.
 
 🔗 **Live Demo:** https://subweather.streamlit.app
-📌 **GitHub:** https://github.com/Jenny5789/SubWeather
 
 ---
 
@@ -97,55 +96,11 @@
 
 ## 🛠️ 기술 스택
 
-### 백엔드
-- **Streamlit**: 인터랙티브 대시보드 프레임워크
-- **Pandas**: 데이터 처리 및 집계
-- **NumPy**: 수치 계산
-
-### 시각화
-- **Plotly Express**: 인터랙티브 차트 (산점도, 막대, 라인)
-- **Folium**: 지리 정보 시각화 (지도, 마커, 연결선)
-- **Streamlit-Folium**: Streamlit과의 통합
-
-### 데이터
-- **KMA 기상청 API**: 기상 데이터
-- **서울 공개 데이터**: 지하철 혼잡도
-
----
-
-## 📈 데이터 처리
-
-### 1. 시간대별 집계
-```
-새벽(00~06) / 출근(06~10) / 낮(10~17) / 퇴근(17~21) / 저녁(21~24)
-```
-
-### 2. 날씨 분류
-```
-맑음 / 비 / 폭염(33°C↑) / 한파(-12°C↓)
-```
-
-### 3. 역-기상소 매칭
-```
-Haversine 거리 공식으로 각 역의 가장 가까운 기상소 연결
-```
-
----
-
-## 🚀 사용 방법
-
-### 로컬 실행
-```bash
-git clone https://github.com/Jenny5789/SubWeather.git
-cd SubWeather
-pip install -r requirements.txt
-streamlit run dashboard/app.py
-```
-
-### 브라우저 접속
-```
-http://localhost:8501
-```
+- **Streamlit**: 인터랙티브 대시보드
+- **Plotly Express**: 통계 차트
+- **Folium**: 지리 정보 시각화
+- **Pandas**: 데이터 처리
+- **Python**: 백엔드
 
 ---
 
@@ -153,48 +108,13 @@ http://localhost:8501
 
 ```
 SubWeather/
-├── dashboard/
-│   └── app.py                 # Streamlit 대시보드 메인
-├── src/
-│   ├── collectors/            # 데이터 수집 모듈
-│   ├── merge.py               # 데이터 통합
-│   └── preprocess.py          # 데이터 전처리
-├── tests/
-│   └── fixtures.py            # 테스트 데이터 (276개 역)
-├── images/                    # 스크린샷
-├── requirements.txt
-└── README.md
+├── dashboard/app.py
+├── src/collectors/
+├── tests/fixtures.py
+├── images/
+└── requirements.txt
 ```
 
 ---
 
-## 🎨 시각화 기법 정리
-
-| 차트 유형 | 용도 | 기술 |
-|---------|------|------|
-| **지도** | 지리적 분포 표현 | Folium + CircleMarker |
-| **산점도** | 변수 간 관계 분석 | Plotly Scatter |
-| **막대 차트** | 카테고리별 비교 | Plotly Bar |
-| **라인 차트** | 시계열 패턴 | Plotly Line |
-| **데이터 테이블** | 상세 데이터 조회 | Streamlit Dataframe |
-
----
-
-## 🔄 향후 개선
-
-- [ ] 실시간 데이터 연동
-- [ ] 예측 모델 추가 (머신러닝)
-- [ ] 276개 전 역 데이터
-- [ ] 대시보드 성능 최적화
-
----
-
-## 📝 라이선스
-
-MIT License
-
----
-
-**프로젝트 목표:**
-이 프로젝트는 **Streamlit, Plotly, Folium 등을 활용한 데이터 시각화 능력**을 보여줍니다.
-단순한 차트를 넘어서 지리 정보, 시계열, 통계 분석을 시각적으로 표현하는 스킬을 입증합니다.
+**이 프로젝트는 Streamlit, Plotly, Folium을 활용한 데이터 시각화 능력을 보여줍니다.**
