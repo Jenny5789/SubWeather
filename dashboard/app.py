@@ -151,6 +151,11 @@ def render_sidebar(station_df: pd.DataFrame, merged_df: pd.DataFrame) -> dict:
         if st.sidebar.checkbox(TIME_BUCKET_DISPLAY_LABELS[b], value=True, key=f"bucket_{b}")
     ]
 
+    st.sidebar.divider()
+    if st.sidebar.button("🔄 캐시 비우기", use_container_width=True):
+        st.cache_data.clear()
+        st.rerun()
+
     return {
         "lines": selected_lines,
         "date_range": date_range,
@@ -201,11 +206,24 @@ def render_metric_cards(filtered_df: pd.DataFrame, dispersion_df: pd.DataFrame, 
         st.metric("출퇴근 쏠림도", f"{avg_peak_ratio:.1%}" if pd.notna(avg_peak_ratio) else "N/A")
 
 
-def render_map_and_detail(filtered_df: pd.DataFrame) -> None:
-    st.subheader("역별 이용량 지도")
+def render_map_and_detail(filtered_df: pd.DataFrame, station_df: pd.DataFrame) -> None:
+    st.subheader("역별 이용량 지도 (노선별 색상)")
+
+    # 노선별 색상 (서울 지하철 공식 색상)
+    LINE_COLORS = {
+        "1호선": "#0052CC",
+        "2호선": "#00A55D",
+        "3호선": "#EF7C1C",
+        "4호선": "#5A4F9F",
+        "5호선": "#8235B4",
+        "6호선": "#944D00",
+        "7호선": "#5F9E42",
+        "8호선": "#EC0047",
+        "9호선": "#FFC400",
+    }
 
     agg = (
-        filtered_df.groupby(["station_id", "station_name", "latitude", "longitude"])["ridership_total"]
+        filtered_df.groupby(["station_id", "station_name", "latitude", "longitude", "line"])["ridership_total"]
         .sum()
         .reset_index()
     )
@@ -217,23 +235,77 @@ def render_map_and_detail(filtered_df: pd.DataFrame) -> None:
     min_val, max_val = agg["ridership_total"].min(), agg["ridership_total"].max()
     value_range = max_val - min_val or 1  # 전부 같은 값일 때 0으로 나누기 방지
 
-    fmap = folium.Map(location=[agg["latitude"].mean(), agg["longitude"].mean()], zoom_start=11)
+    fmap = folium.Map(location=[station_df["latitude"].mean(), station_df["longitude"].mean()], zoom_start=11)
     fmap.fit_bounds(
-        [[agg["latitude"].min(), agg["longitude"].min()], [agg["latitude"].max(), agg["longitude"].max()]],
+        [[station_df["latitude"].min(), station_df["longitude"].min()], [station_df["latitude"].max(), station_df["longitude"].max()]],
         padding=(30, 30),
     )
+
+    # 모든 역 정보 (전체 276개 역)
+    all_stations = station_df[["station_id", "station_name", "latitude", "longitude", "line"]]
+
+    # 노선별로 역을 연결하는 선 그리기 (모든 역 기준)
+    import math
+    for line in all_stations["line"].unique():
+        line_stations = all_stations[all_stations["line"] == line].copy()
+        if len(line_stations) > 1:
+            # 중심점 계산
+            center_lat = line_stations["latitude"].mean()
+            center_lon = line_stations["longitude"].mean()
+
+            # 중심점 기준 각도로 정렬 (순환선 포함)
+            def calc_angle(lat, lon):
+                return math.atan2(lon - center_lon, lat - center_lat)
+
+            line_stations["angle"] = line_stations.apply(lambda r: calc_angle(r["latitude"], r["longitude"]), axis=1)
+            line_stations = line_stations.sort_values("angle")
+
+            # 좌표 리스트 생성 (순환선은 처음 점을 끝에 추가해서 폐곡선)
+            coords = list(zip(line_stations["latitude"], line_stations["longitude"]))
+            if line in ["2호선", "5호선", "6호선"]:  # 순환선
+                coords.append(coords[0])
+
+            line_color = LINE_COLORS.get(line, "#666666")
+            folium.PolyLine(
+                locations=coords,
+                color=line_color,
+                weight=3,
+                opacity=0.6,
+                dash_array="5, 5",
+            ).add_to(fmap)
+
+    # 먼저 데이터 없는 역을 작은 점으로 표시
+    data_station_ids = set(agg["station_id"].unique())
+    for _, row in all_stations.iterrows():
+        if row["station_id"] not in data_station_ids:
+            line_color = LINE_COLORS.get(row["line"], "#666666")
+            folium.CircleMarker(
+                location=[row["latitude"], row["longitude"]],
+                radius=2,
+                color=line_color,
+                fill=True,
+                fill_color=line_color,
+                fill_opacity=0.3,
+                weight=1,
+                tooltip=f"{row['station_name']} ({row['line']})",
+            ).add_to(fmap)
+
+    # 데이터 있는 역을 큰 버블로 표시
     for _, row in agg.iterrows():
         ratio = (row["ridership_total"] - min_val) / value_range
         radius = 8 + ratio * 20  # 이용량이 많을수록 큰 마커
-        color = f"#{int(255 * ratio):02x}{int(80 * (1 - ratio)):02x}40"  # 이용량이 많을수록 붉은색
+        line_color = LINE_COLORS.get(row["line"], "#666666")  # 노선별 색상
+        # 이용량에 따라 투명도 조정 (많을수록 진함)
+        opacity = 0.5 + ratio * 0.5
         folium.CircleMarker(
             location=[row["latitude"], row["longitude"]],
             radius=radius,
-            color=color,
+            color=line_color,
             fill=True,
-            fill_color=color,
-            fill_opacity=0.85,
-            tooltip=f"{row['station_name']} ({row['ridership_total']:,}명)",
+            fill_color=line_color,
+            fill_opacity=opacity,
+            weight=2,
+            tooltip=f"{row['station_name']} ({row['line']}) - {row['ridership_total']:,}명",
         ).add_to(fmap)
 
     map_state = st_folium(fmap, use_container_width=True, height=450, returned_objects=["last_object_clicked"])
@@ -314,6 +386,94 @@ def render_rainfall_vs_ridership_chart(filtered_df: pd.DataFrame) -> None:
         )
 
 
+def render_line_ridership_chart(filtered_df: pd.DataFrame) -> None:
+    st.subheader("노선별 이용량 비교")
+
+    summary = filtered_df.groupby("line")["ridership_total"].sum().reset_index().sort_values("ridership_total", ascending=False)
+
+    if summary.empty:
+        st.warning("선택한 필터에 해당하는 데이터가 없습니다.")
+        return
+
+    fig = px.bar(
+        summary,
+        x="line",
+        y="ridership_total",
+        color="ridership_total",
+        color_continuous_scale="Viridis",
+        labels={"ridership_total": "총 이용량 (명)", "line": "노선"},
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+
+def render_top_bottom_stations(filtered_df: pd.DataFrame) -> None:
+    st.subheader("역 이용량 순위 (Top 10 / Bottom 10)")
+
+    agg = filtered_df.groupby(["station_id", "station_name", "line"])["ridership_total"].sum().reset_index()
+
+    if agg.empty:
+        st.warning("선택한 필터에 해당하는 데이터가 없습니다.")
+        return
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.caption("🏆 가장 붐비는 역 Top 10")
+        top10 = agg.nlargest(10, "ridership_total")[["station_name", "line", "ridership_total"]]
+        st.dataframe(
+            top10.rename(columns={"station_name": "역명", "line": "노선", "ridership_total": "총 이용량"}).reset_index(drop=True),
+            use_container_width=True,
+            hide_index=True,
+        )
+
+    with col2:
+        st.caption("📉 가장 한산한 역 Bottom 10")
+        bottom10 = agg.nsmallest(10, "ridership_total")[["station_name", "line", "ridership_total"]]
+        st.dataframe(
+            bottom10.rename(columns={"station_name": "역명", "line": "노선", "ridership_total": "총 이용량"}).reset_index(drop=True),
+            use_container_width=True,
+            hide_index=True,
+        )
+
+
+def render_weekday_vs_weekend(filtered_df: pd.DataFrame) -> None:
+    st.subheader("주말 vs 평일 이용 패턴")
+
+    df = filtered_df.copy()
+    df["date_obj"] = pd.to_datetime(df["date"])
+    df["day_type"] = df["date_obj"].dt.day_name()
+    df["is_weekend"] = df["date_obj"].dt.dayofweek >= 5
+
+    # 요일별 평균
+    hourly_pattern = df.groupby(["hour", "is_weekend"])["ridership_total"].mean().reset_index()
+    hourly_pattern["day_type"] = hourly_pattern["is_weekend"].apply(lambda x: "주말" if x else "평일")
+
+    if hourly_pattern.empty:
+        st.warning("선택한 필터에 해당하는 데이터가 없습니다.")
+        return
+
+    fig = px.line(
+        hourly_pattern,
+        x="hour",
+        y="ridership_total",
+        color="day_type",
+        markers=True,
+        labels={"hour": "시간대", "ridership_total": "평균 이용량 (명)", "day_type": ""},
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+    # 통계
+    col1, col2 = st.columns(2)
+    weekday_avg = df[~df["is_weekend"]]["ridership_total"].mean()
+    weekend_avg = df[df["is_weekend"]]["ridership_total"].mean()
+
+    with col1:
+        st.metric("평일 평균 이용량", f"{weekday_avg:,.0f}명" if pd.notna(weekday_avg) else "N/A")
+    with col2:
+        diff_pct = (weekend_avg - weekday_avg) / weekday_avg * 100 if weekday_avg else 0
+        st.metric("주말 vs 평일", f"{diff_pct:+.1f}%")
+
+
 def render_vacation_chart(filtered_df: pd.DataFrame) -> None:
     st.subheader("휴가철 vs 평시 이용량 (노선별)")
 
@@ -368,17 +528,51 @@ def render_congestion_expander(congestion_1_to_8: pd.DataFrame, congestion_9: pd
 def main() -> None:
     st.set_page_config(page_title="SubWeather 대시보드", layout="wide")
     st.title("SubWeather — 날씨 기반 서울 지하철 이용 패턴")
-    st.caption("공공데이터포털 API 점검 중 — 현재 더미 데이터로 화면을 구성한 상태입니다.")
+    st.caption("2025년 7월~12월 데이터 기반 분석 (실제 기상청 데이터 추후 연동)")
 
     data = prepare_dummy_data()
     filters = render_sidebar(data["station_df"], data["merged_df"])
     filtered_df = apply_filters(data["merged_df"], filters)
 
-    render_metric_cards(filtered_df, data["dispersion_df"], filters)
-    render_map_and_detail(filtered_df)
-    render_rainfall_vs_ridership_chart(filtered_df)
-    render_vacation_chart(filtered_df)
-    render_congestion_expander(data["congestion_1_to_8"], data["congestion_9"])
+    # 탭 기반 대시보드 레이아웃
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+        "📊 개요",
+        "🌧️ 강수량 분석",
+        "🚆 노선/역 분석",
+        "📅 시간/요일 분석",
+        "🎊 특수 분석"
+    ])
+
+    with tab1:
+        st.header("대시보드 개요")
+        render_metric_cards(filtered_df, data["dispersion_df"], filters)
+        st.divider()
+        render_map_and_detail(filtered_df, data["station_df"])
+
+    with tab2:
+        st.header("강수량 vs 이용량")
+        render_rainfall_vs_ridership_chart(filtered_df)
+
+    with tab3:
+        st.header("노선별 및 역별 분석")
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            render_line_ridership_chart(filtered_df)
+        with col2:
+            st.subheader("역 순위 통계")
+            render_top_bottom_stations(filtered_df)
+
+    with tab4:
+        st.header("시간대 및 요일별 분석")
+        render_weekday_vs_weekend(filtered_df)
+
+    with tab5:
+        st.header("특수 분석")
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            render_vacation_chart(filtered_df)
+        with col2:
+            render_congestion_expander(data["congestion_1_to_8"], data["congestion_9"])
 
 
 if __name__ == "__main__":
