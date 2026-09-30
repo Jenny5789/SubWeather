@@ -193,6 +193,9 @@ def apply_filters(merged_df: pd.DataFrame, filters: dict) -> pd.DataFrame:
 
 
 def render_metric_cards(filtered_df: pd.DataFrame, dispersion_df: pd.DataFrame, filters: dict) -> None:
+    st.write(f"🔍 **필터 적용 후 데이터: {len(filtered_df)}개 행**")
+    st.write(f"선택된 노선: {filters['lines']}")
+    st.write(f"선택된 시간대: {filters['time_buckets']}")
     col1, col2, col3 = st.columns(3)
 
     with col1:
